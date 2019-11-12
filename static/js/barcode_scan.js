@@ -1,18 +1,17 @@
 if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'function') {
   var _scannerIsRunning = false;
+  var width = $( window ).width();
+  var videoSize = Math.min(width - 20, 500);
 
   function startScanner() {
-    var width = $( window ).width();
-    var constraintsSize = Math.min(width - 20, 500);
-
     Quagga.init({
       inputStream: {
         name: "Live",
         type: "LiveStream",
         target: document.querySelector('#_scanner_container'),
         constraints: {
-          width: constraintsSize,
-          height: constraintsSize,
+          width: 650,
+          height: 650,
           facingMode: "environment"
         },
       },
@@ -48,24 +47,29 @@ if (navigator.mediaDevices && typeof navigator.mediaDevices.getUserMedia === 'fu
     });
 
     Quagga.onProcessed(function (result) {
+      $('#_scanner_container video').css('width', videoSize);
+      $('#_scanner_container video').css('height', videoSize);
       $('#_scanner_container video').css('display', 'inline');
     });
 
     Quagga.onDetected(function (result) {
-      $('#_barcode_result').val('');
-      $('#_barcode_result').val(result.codeResult.code);
-      Quagga.stop();
-      _scannerIsRunning = false;
-      $('#_scanner_container video').css('display', 'none');
+      var firstLetter = result.codeResult.code.substring(0, 1);
+      if (firstLetter === '9') {
+        $('#_barcode_result').val('');
+        $('#_barcode_result').val(result.codeResult.code);
+        Quagga.stop();
+        _scannerIsRunning = false;
+        $('#_scanner_container video').css('display', 'none');
+      }
     });
   }
 } else {
-  alert('바코드 인식이 지원되지 않는 기기입니다.')
+  alert('바코드 인식이 지원되지 않는 기기입니다.');
 }
 
 $( document ).ready(function() {
   $('._barcode_scan').click(function (e) {
-    e.preventDefault()
+    e.preventDefault();
     if (_scannerIsRunning) {
       Quagga.stop();
       _scannerIsRunning = false;
@@ -73,5 +77,5 @@ $( document ).ready(function() {
     } else {
       startScanner();
     }
-  })
-})
+  });
+});
